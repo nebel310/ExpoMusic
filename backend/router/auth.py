@@ -35,4 +35,4 @@ async def login_user(form_data: OAuth2PasswordRequestForm = Depends()):
 
 @router.get("/me", response_model=SUser)
 async def get_current_user_info(current_user: UserOrm = Depends(get_current_user)):
-    return SUser.from_orm(current_user)
+    return SUser.model_validate(current_user)

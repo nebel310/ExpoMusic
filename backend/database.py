@@ -1,7 +1,8 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy_utils import EmailType
+from sqlalchemy import DateTime
 
 
 
@@ -24,7 +25,7 @@ class UserOrm(Model):
     username: Mapped[str]
     email: Mapped[str] = mapped_column(EmailType, unique=True, nullable=False)
     hashed_password: Mapped[str]
-    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)  # Используем datetime.utcnow
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))  # Используем TIMESTAMP WITH TIME ZONE
     is_active: Mapped[bool] = mapped_column(default=True)
 
 

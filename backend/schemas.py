@@ -18,13 +18,7 @@ class SUser(BaseModel):
     id: int
     username: str
     email: EmailStr
-    created_at: str  # Ожидаем строку
+    created_at: datetime  # Ожидаем datetime с временной зоной
     is_active: bool
 
     model_config = ConfigDict(from_attributes=True)
-
-    @classmethod
-    def from_orm(cls, obj):
-        # Преобразуем created_at в строку
-        obj.created_at = str(obj.created_at)
-        return super().from_orm(obj)
