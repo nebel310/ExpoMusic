@@ -1,0 +1,105 @@
+.auth-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: var(--background-color);
+  font-family: 'Inter', sans-serif;
+}
+
+.auth-form {
+  background-color: #181818;
+  padding: 2rem;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.auth-form h2 {
+  margin-bottom: 1.5rem;
+  font-size: 2rem;
+  color: var(--text-color);
+  font-family: 'Montserrat', sans-serif;
+}
+
+.auth-form label {
+  display: block;
+  text-align: left;
+  margin-bottom: 0.5rem;
+  color: var(--text-color);
+  font-size: 0.9rem;
+}
+
+.auth-form .input-container {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.auth-form .input-container i {
+  position: absolute;
+  left: 10px;
+  top: 68%;
+  transform: translateY(-50%);
+  color: var(--text-secondary-color);
+  font-size: 1rem; /* Размер иконки */
+  line-height: 1; /* Убираем лишний отступ у иконок */
+  height: 1rem; /* Фиксированная высота иконки */
+  display: flex;
+  align-items: center; /* Центрируем иконку по вертикали */
+  justify-content: center; /* Центрируем иконку по горизонтали */
+}
+
+.auth-form input {
+  width: calc(100% - 40px); /* Ширина как у кнопки "Далее" */
+  padding: 0.75rem 0.75rem 0.75rem 40px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  background-color: #333; /* Цвет как у кнопки "Далее" */
+  color: var(--text-color);
+  font-size: 1rem;
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  line-height: 1.5; /* Выравнивание текста по вертикали */
+}
+
+.auth-form input:focus {
+  border-color: var(--text-color); /* Подсветка белым при фокусе */
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+}
+
+.auth-form input:invalid:not(:placeholder-shown) {
+  border-color: #ff4d4d; /* Подсветка красным при ошибке */
+}
+
+.auth-form input::placeholder {
+  color: var(--text-secondary-color);
+}
+
+.auth-form button {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: var(--primary-color);
+  color: #181818;
+  border-radius: 25px;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background-color var(--transition);
+  border: none;
+  cursor: pointer;
+}
+
+.auth-form button:hover {
+  background-color: #1ed760;
+}
+
+.auth-form p {
+  margin-top: 1.5rem;
+  color: var(--text-secondary-color);
+}
+
+.auth-form a {
+  color: var(--primary-color);
+  text-decoration: underline;
+}
