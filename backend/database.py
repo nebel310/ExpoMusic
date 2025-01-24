@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy_utils import EmailType
@@ -21,10 +21,11 @@ class UserOrm(Model):
     __tablename__ = 'users'
     
     id: Mapped[int] = mapped_column(primary_key=True)
+    username: Mapped[str]
     email: Mapped[str] = mapped_column(EmailType, unique=True, nullable=False)
     hashed_password: Mapped[str]
-    username: Mapped[str]
-    created_at: Mapped[datetime] = mapped_column(default=datetime.now(timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)  # Используем datetime.utcnow
+    is_active: Mapped[bool] = mapped_column(default=True)
 
 
 async def create_tables():
