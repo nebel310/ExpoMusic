@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
+from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from database import create_tables, delete_tables
 from router.auth import router as auth_router
@@ -45,3 +46,12 @@ def custom_openapi():
 app = FastAPI(lifespan=lifespan)
 app.openapi = custom_openapi
 app.include_router(auth_router)
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://127.0.0.1:5500"],  # Укажи адрес фронтенда
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
