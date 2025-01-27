@@ -1,8 +1,9 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from database import UserOrm
 from jose import jwt, JWTError
 from datetime import datetime, timedelta, timezone
+from database import new_session, BlacklistedTokenOrm, UserOrm
+from sqlalchemy import select, delete
 from repositories.auth import UserRepository
 
 
@@ -27,6 +28,18 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserOrm:
         detail="Не удалось подтвердить учетные данные",
         headers={"WWW-Authenticate": "Bearer"},
     )
+    
+    async with new_session() as session:
+        query = delete(BlacklistedTokenOrm).where(BlacklistedTokenOrm.expires_at < datetime.now(timezone.utc))
+        await session.execute(query)
+        await session.commit()
+    
+    async with new_session() as session:
+        query = select(BlacklistedTokenOrm).where(BlacklistedTokenOrm.token == token)
+        result = await session.execute(query)
+        if result.scalars().first():
+            raise credentials_exception
+    
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")

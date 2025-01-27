@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Expo Music - Профиль</title>
+  <link rel="stylesheet" href="../styles/common.css">
+  <link rel="stylesheet" href="../styles/profile.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Montserrat:wght@700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="header">
+    <div class="header__container">
+      <a href="../index.html" class="header__logo">Expo Music</a>
+      <nav class="header__nav">
+        <ul class="header__nav-list">
+          <li class="header__nav-item"><a href="../index.html" class="header__nav-link">Главная</a></li>
+          <li class="header__nav-item"><a href="search.html" class="header__nav-link">Поиск</a></li>
+          <li class="header__nav-item"><a href="library.html" class="header__nav-link">Моя медиатека</a></li>
+          <li class="header__nav-item"><a href="#" class="header__nav-link">Плейлисты</a></li>
+          <li class="header__nav-item"><a href="admin.html" class="header__nav-link">Админка</a></li>
+        </ul>
+      </nav>
+      <div class="header__auth">
+        <span id="username" class="header__username"></span>
+        <button id="logout-button" class="header__auth-button">Выйти</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="profile">
+    <div class="profile__container">
+      <h1 class="profile__title">Профиль</h1>
+      <div class="profile__info">
+        <p><strong>Имя пользователя:</strong> <span id="profile-username"></span></p>
+        <p><strong>Email:</strong> <span id="profile-email"></span></p>
+        <p><strong>Дата регистрации:</strong> <span id="profile-created-at"></span></p>
+      </div>
+    </div>
+  </main>
+
+  <script src="../scripts/profile.js"></script>
+</body>
+</html>

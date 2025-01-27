@@ -1,13 +1,18 @@
-from database import new_session, UserOrm
+from database import new_session, UserOrm, RefreshTokenOrm, BlacklistedTokenOrm
 from schemas import SUserRegister
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from passlib.context import CryptContext
+from jose import jwt, JWTError
+from datetime import datetime, timezone, timedelta
 
 
 
+
+SECRET_KEY = "your-secret-key"
+ALGORITHM = "HS256"
+REFRESH_TOKEN_EXPIRE_DAYS = 7
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 
 class UserRepository:
     @classmethod
@@ -37,7 +42,7 @@ class UserRepository:
             result = await session.execute(query)
             user = result.scalars().first()
             
-            if not user or not pwd_context.verify(password, user.hashed_password):
+            if not user or not pwd_context.verify(password, user.hashed_password) or not user.is_active:
                 return None
             
             return user
@@ -48,3 +53,66 @@ class UserRepository:
             query = select(UserOrm).where(UserOrm.email == email)
             result = await session.execute(query)
             return result.scalars().first()
+    
+    @classmethod
+    async def get_user_by_id(cls, user_id: int) -> UserOrm | None:
+        async with new_session() as session:
+            query = select(UserOrm).where(UserOrm.id == user_id)
+            result = await session.execute(query)
+            return result.scalars().first()
+    
+    @classmethod
+    async def get_user_by_refresh_token(cls, refresh_token: str) -> UserOrm | None:
+        async with new_session() as session:
+            query = select(RefreshTokenOrm).where(RefreshTokenOrm.token == refresh_token)
+            result = await session.execute(query)
+            refresh_token_orm = result.scalars().first()
+            
+            if not refresh_token_orm or refresh_token_orm.expires_at < datetime.now(timezone.utc):
+                return None
+            
+            return await cls.get_user_by_id(refresh_token_orm.user_id)
+    
+    @classmethod
+    async def create_refresh_token(cls, user_id: int) -> str:
+        async with new_session() as session:
+            # Удаляем старый refresh токен пользователя, если он существует
+            delete_query = delete(RefreshTokenOrm).where(RefreshTokenOrm.user_id == user_id)
+            await session.execute(delete_query)
+            
+            # Создаем новый refresh токен
+            refresh_token = jwt.encode({"sub": str(user_id)}, SECRET_KEY, algorithm=ALGORITHM)
+            expires_at = datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+            
+            refresh_token_orm = RefreshTokenOrm(
+                user_id=user_id,
+                token=refresh_token,
+                expires_at=expires_at
+            )
+            session.add(refresh_token_orm)
+            await session.commit()
+            return refresh_token
+
+    @classmethod
+    async def revoke_refresh_token(cls, user_id: int):
+        async with new_session() as session:
+            query = delete(RefreshTokenOrm).where(RefreshTokenOrm.user_id == user_id)
+            await session.execute(query)
+            await session.commit()
+
+    @classmethod
+    async def add_to_blacklist(cls, token: str):
+        async with new_session() as session:
+            try:
+                payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+                expires_at = datetime.fromtimestamp(payload["exp"], tz=timezone.utc)
+            except JWTError:
+                return
+
+            blacklisted_token = BlacklistedTokenOrm(
+                token=token,
+                expires_at=expires_at,
+                created_at=datetime.now(timezone.utc)
+            )
+            session.add(blacklisted_token)
+            await session.commit()

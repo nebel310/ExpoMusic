@@ -38,6 +38,7 @@ def custom_openapi():
     # Указываем, что маршруты /auth/me требуют авторизации
     if "/auth/me" in openapi_schema["paths"]:
         openapi_schema["paths"]["/auth/me"]["get"]["security"] = [{"Bearer": []}]
+        openapi_schema["paths"]["/auth/logout"]["post"]["security"] = [{"Bearer": []}]
     
     app.openapi_schema = openapi_schema
     return app.openapi_schema
