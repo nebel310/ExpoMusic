@@ -1,3 +1,36 @@
+/* Flash-уведомления */
+.flash-message {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 1rem;
+  border-radius: 4px;
+  color: white;
+  font-size: 0.9rem;
+  z-index: 1000;
+  animation: slideIn 0.5s ease-out;
+}
+
+.flash-message.success {
+  background-color: #1db954; /* Зеленый для успешных уведомлений */
+}
+
+.flash-message.error {
+  background-color: #ff4d4d; /* Красный для ошибок */
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Остальные стили остаются без изменений */
 .auth-page {
   display: flex;
   justify-content: center;
@@ -43,34 +76,34 @@
   top: 68%;
   transform: translateY(-50%);
   color: var(--text-secondary-color);
-  font-size: 1rem; /* Размер иконки */
-  line-height: 1; /* Убираем лишний отступ у иконок */
-  height: 1rem; /* Фиксированная высота иконки */
+  font-size: 1rem;
+  line-height: 1;
+  height: 1rem;
   display: flex;
-  align-items: center; /* Центрируем иконку по вертикали */
-  justify-content: center; /* Центрируем иконку по горизонтали */
+  align-items: center;
+  justify-content: center;
 }
 
 .auth-form input {
-  width: calc(100% - 40px); /* Ширина как у кнопки "Далее" */
+  width: calc(100% - 40px);
   padding: 0.75rem 0.75rem 0.75rem 40px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 4px;
-  background-color: #333; /* Цвет как у кнопки "Далее" */
+  background-color: #333;
   color: var(--text-color);
   font-size: 1rem;
   outline: none;
   transition: border-color var(--transition), box-shadow var(--transition);
-  line-height: 1.5; /* Выравнивание текста по вертикали */
+  line-height: 1.5;
 }
 
 .auth-form input:focus {
-  border-color: var(--text-color); /* Подсветка белым при фокусе */
+  border-color: var(--text-color);
   box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
 }
 
 .auth-form input:invalid:not(:placeholder-shown) {
-  border-color: #ff4d4d; /* Подсветка красным при ошибке */
+  border-color: #ff4d4d;
 }
 
 .auth-form input::placeholder {

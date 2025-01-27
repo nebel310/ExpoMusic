@@ -2,9 +2,96 @@ document.addEventListener("DOMContentLoaded", () => {
   const registerForm = document.getElementById("register-form");
   const loginForm = document.getElementById("login-form");
 
+  // Функция для отображения flash-уведомлений
+  const showFlashMessage = (message, type = "success") => {
+    const flashContainer = document.createElement("div");
+    flashContainer.className = `flash-message ${type}`;
+    flashContainer.textContent = message;
+
+    document.body.appendChild(flashContainer);
+
+    // Автоматическое удаление уведомления через 3 секунды
+    setTimeout(() => {
+      flashContainer.remove();
+    }, 3000);
+  };
+
   // Функция для отображения ошибок
   const showError = (message) => {
-    alert(message); // Можно заменить на более красивый вывод ошибок
+    showFlashMessage(message, "error");
+  };
+
+  // Функция для сохранения токенов в localStorage
+  const saveTokens = (accessToken, refreshToken) => {
+    localStorage.setItem("access_token", accessToken);
+    localStorage.setItem("refresh_token", refreshToken);
+  };
+
+  // Функция для удаления токенов из localStorage
+  const removeTokens = () => {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+  };
+
+  // Функция для обновления access_token
+  const refreshAccessToken = async () => {
+    const refreshToken = localStorage.getItem("refresh_token");
+    if (!refreshToken) {
+      removeTokens();
+      window.location.href = "/frontend/pages/login.html";
+      return null;
+    }
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/auth/refresh", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        saveTokens(data.access_token, refreshToken); // Сохраняем новый access_token
+        return data.access_token;
+      } else {
+        removeTokens();
+        window.location.href = "/frontend/pages/login.html";
+        return null;
+      }
+    } catch (error) {
+      console.error("Ошибка при обновлении токена:", error);
+      removeTokens();
+      window.location.href = "/frontend/pages/login.html";
+      return null;
+    }
+  };
+
+  // Функция для выполнения запросов с автоматическим обновлением токена
+  const fetchWithAuth = async (url, options = {}) => {
+    let accessToken = localStorage.getItem("access_token");
+    if (!accessToken) {
+      window.location.href = "/frontend/pages/login.html";
+      return;
+    }
+
+    // Добавляем токен в заголовки
+    options.headers = {
+      ...options.headers,
+      Authorization: `Bearer ${accessToken}`,
+    };
+
+    let response = await fetch(url, options);
+
+    // Если токен истек, пытаемся обновить его
+    if (response.status === 401) {
+      const newAccessToken = await refreshAccessToken();
+      if (newAccessToken) {
+        options.headers.Authorization = `Bearer ${newAccessToken}`;
+        response = await fetch(url, options);
+      }
+    }
+
+    return response;
   };
 
   // Обработка регистрации
@@ -16,7 +103,7 @@ document.addEventListener("DOMContentLoaded", () => {
         username: formData.get("username"),
         email: formData.get("email"),
         password: formData.get("password"),
-        password_confirm: formData.get("password_confirm"), // Добавляем подтверждение пароля
+        password_confirm: formData.get("password_confirm"),
       };
 
       // Проверка совпадения паролей
@@ -33,14 +120,17 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         if (response.ok) {
-          window.location.href = "login.html"; // Перенаправляем на страницу входа после успешной регистрации
+          const result = await response.json();
+          showFlashMessage("Регистрация прошла успешно!");
+          setTimeout(() => {
+            window.location.href = "/frontend/pages/login.html";
+          }, 1500); // Перенаправляем через 1.5 секунды
         } else {
           const errorData = await response.json();
-          console.error("Ошибка регистрации:", errorData); // Логируем ошибку
           showError(errorData.message || "Ошибка регистрации");
         }
       } catch (error) {
-        console.error("Ошибка:", error); // Логируем ошибку
+        console.error("Ошибка:", error);
         showError("Произошла ошибка при регистрации");
       }
     });
@@ -52,8 +142,8 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
       const formData = new FormData(loginForm);
       const data = {
-        email: formData.get("email"), // Убедись, что name="email" в поле ввода
-        password: formData.get("password"), // Убедись, что name="password" в поле ввода
+        email: formData.get("email"),
+        password: formData.get("password"),
       };
 
       try {
@@ -65,47 +155,71 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (response.ok) {
           const result = await response.json();
-          localStorage.setItem("access_token", result.access_token); // Сохраняем токен
-          window.location.href = "/frontend/index.html"; // Перенаправляем на главную страницу
+          saveTokens(result.access_token, result.refresh_token); // Сохраняем токены
+          showFlashMessage("Вход выполнен успешно!");
+          setTimeout(() => {
+            window.location.href = "/frontend/index.html"; // Перенаправляем на главную страницу
+          }, 1500);
         } else {
           const errorData = await response.json();
-          console.error("Ошибка входа:", errorData); // Логируем ошибку
           showError(errorData.detail || "Ошибка входа");
         }
       } catch (error) {
-        console.error("Ошибка:", error); // Логируем ошибку
+        console.error("Ошибка:", error);
         showError("Произошла ошибка при входе");
       }
     });
   }
+
+  // Обработка выхода
+  const logout = async () => {
+    try {
+      const response = await fetchWithAuth("http://127.0.0.1:8000/auth/logout", {
+        method: "POST",
+      });
+
+      if (response.ok) {
+        removeTokens();
+        showFlashMessage("Выход выполнен успешно!");
+        setTimeout(() => {
+          window.location.href = "/frontend/index.html";
+        }, 1500);
+      } else {
+        showError("Ошибка при выходе");
+      }
+    } catch (error) {
+      console.error("Ошибка:", error);
+      showError("Произошла ошибка при выходе");
+    }
+  };
 
   // Проверка авторизации при загрузке страницы
   const checkAuth = async () => {
     const token = localStorage.getItem("access_token");
     if (token) {
       try {
-        const response = await fetch("http://127.0.0.1:8000/auth/me", {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
+        const response = await fetchWithAuth("http://127.0.0.1:8000/auth/me");
         if (response.ok) {
           const userData = await response.json();
           console.log("Пользователь авторизован:", userData);
           // Можно обновить интерфейс, например, показать имя пользователя
         } else {
-          console.error("Ошибка при проверке авторизации:", response.status); // Логируем ошибку
-          localStorage.removeItem("access_token"); // Удаляем токен, если он недействителен
+          console.error("Ошибка при проверке авторизации:", response.status);
+          removeTokens();
         }
       } catch (error) {
-        console.error("Ошибка при проверке авторизации:", error); // Логируем ошибку
-        localStorage.removeItem("access_token");
+        console.error("Ошибка при проверке авторизации:", error);
+        removeTokens();
       }
     }
   };
 
   // Проверяем авторизацию при загрузке страницы
   checkAuth();
+
+  // Обработка выхода
+  const logoutButton = document.getElementById("logout-button");
+  if (logoutButton) {
+    logoutButton.addEventListener("click", logout);
+  }
 });
