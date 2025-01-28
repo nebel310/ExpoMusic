@@ -1,3 +1,5 @@
+import os
+from dotenv import load_dotenv
 from database import new_session, UserOrm, RefreshTokenOrm, BlacklistedTokenOrm
 from schemas import SUserRegister
 from sqlalchemy import select, delete
@@ -8,9 +10,11 @@ from datetime import datetime, timezone, timedelta
 
 
 
-SECRET_KEY = "your-secret-key"
-ALGORITHM = "HS256"
-REFRESH_TOKEN_EXPIRE_DAYS = 7
+load_dotenv()
+
+SECRET_KEY = os.getenv('SECRET_KEY')
+ALGORITHM = os.getenv('ALGORITHM')
+REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv('REFRESH_TOKEN_EXPIRE_DAYS'))
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

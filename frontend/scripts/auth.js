@@ -16,6 +16,24 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 3000);
   };
 
+  // Функция для сохранения flash-сообщения в localStorage
+  const saveFlashMessage = (message, type = "success") => {
+    localStorage.setItem("flash_message", JSON.stringify({ message, type }));
+  };
+
+  // Функция для отображения сохраненного flash-сообщения
+  const showSavedFlashMessage = () => {
+    const flashData = localStorage.getItem("flash_message");
+    if (flashData) {
+      const { message, type } = JSON.parse(flashData);
+      showFlashMessage(message, type);
+      localStorage.removeItem("flash_message"); // Удаляем сообщение после отображения
+    }
+  };
+
+  // Показываем сохраненное сообщение при загрузке страницы
+  showSavedFlashMessage();
+
   // Функция для отображения ошибок
   const showError = (message) => {
     showFlashMessage(message, "error");
@@ -121,10 +139,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (response.ok) {
           const result = await response.json();
-          showFlashMessage("Регистрация прошла успешно!");
-          setTimeout(() => {
-            window.location.href = "/frontend/pages/login.html";
-          }, 1500); // Перенаправляем через 1.5 секунды
+          saveFlashMessage("Регистрация прошла успешно!");
+          window.location.href = "/frontend/pages/login.html"; // Мгновенный редирект
         } else {
           const errorData = await response.json();
           showError(errorData.message || "Ошибка регистрации");
@@ -156,10 +172,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if (response.ok) {
           const result = await response.json();
           saveTokens(result.access_token, result.refresh_token); // Сохраняем токены
-          showFlashMessage("Вход выполнен успешно!");
-          setTimeout(() => {
-            window.location.href = "/frontend/index.html"; // Перенаправляем на главную страницу
-          }, 1500);
+          saveFlashMessage("Вход выполнен успешно!");
+          window.location.href = "/frontend/index.html"; // Мгновенный редирект
         } else {
           const errorData = await response.json();
           showError(errorData.detail || "Ошибка входа");
@@ -180,10 +194,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (response.ok) {
         removeTokens();
-        showFlashMessage("Выход выполнен успешно!");
-        setTimeout(() => {
-          window.location.href = "/frontend/index.html";
-        }, 1500);
+        saveFlashMessage("Выход выполнен успешно!");
+        window.location.href = "/frontend/index.html"; // Мгновенный редирект
       } else {
         showError("Ошибка при выходе");
       }
