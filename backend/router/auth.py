@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
-from schemas import SUserRegister, SUserLogin, SUser
+from schemas import SUserRegister, SUserLogin, SUser, SUserConfirm
 from repositories.auth import UserRepository
 from database import UserOrm
 from security import create_access_token, get_current_user, oauth2_scheme
+from utils import generate_email_token, send_confirmation_email, confirm_email_token
 
 
 
@@ -18,7 +19,16 @@ router = APIRouter(
 async def register_user(user_data: SUserRegister):
     try:
         user_id = await UserRepository.register_user(user_data)
-        return {"success": True, "user_id": user_id}
+        return {"success": True, "user_id": user_id, "message": "Подтверждение почты отправлено"}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/confirm/{token}")
+async def confirm_email(token: str):
+    try:
+        is_confirmed = await UserRepository.confirm_email(token)
+        return {"success": True, "is_confirmed": is_confirmed}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 

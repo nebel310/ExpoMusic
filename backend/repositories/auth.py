@@ -1,11 +1,12 @@
 import os
 from dotenv import load_dotenv
 from database import new_session, UserOrm, RefreshTokenOrm, BlacklistedTokenOrm
-from schemas import SUserRegister
+from schemas import SUserRegister, SUserConfirm
 from sqlalchemy import select, delete
 from passlib.context import CryptContext
 from jose import jwt, JWTError
 from datetime import datetime, timezone, timedelta
+from utils import generate_email_token, send_confirmation_email, confirm_email_token
 
 
 
@@ -26,18 +27,45 @@ class UserRepository:
             result = await session.execute(query)
             if result.scalars().first():
                 raise ValueError("Пользователь с таким email уже существует")
-            
+              
             hashed_password = pwd_context.hash(user_data.password)
+            
+            token = generate_email_token(user_data.email)
+            send_confirmation_email(user_data.email, token)
             
             user = UserOrm(
                 username=user_data.username,
                 email=user_data.email,
-                hashed_password=hashed_password
+                hashed_password=hashed_password,
+                is_confirmed=user_data.is_confirmed
             )
             session.add(user)
             await session.flush()
             await session.commit()
             return user.id
+    
+    @classmethod
+    async def confirm_email(cls, token:str) -> bool:
+        async with new_session() as session:
+            # query = select(UserOrm).where(UserOrm.email == user_data.email).one_or_none()
+            # result = await session.execute(query)
+            #email = confirm_email_token(token)
+            # if not email:
+            #     return {"message": "Неверный или просроченый токен"}
+            
+            # if result.scalars().first() is None:
+            #     return {"message": "Пользователь не найден"}
+            email = confirm_email_token(token)
+            query = select(UserOrm).where(UserOrm.email == email)
+            result = await session.execute(query)
+            user = result.scalars().first()
+            
+            if user:
+                user.is_confirmed = True
+            
+            await session.flush()
+            await session.commit()
+            return user.is_confirmed
     
     @classmethod
     async def authenticate_user(cls, email: str, password: str) -> UserOrm | None:
@@ -46,7 +74,7 @@ class UserRepository:
             result = await session.execute(query)
             user = result.scalars().first()
             
-            if not user or not pwd_context.verify(password, user.hashed_password) or not user.is_active:
+            if not user or not pwd_context.verify(password, user.hashed_password) or not user.is_active or not user.is_confirmed:
                 return None
             
             return user

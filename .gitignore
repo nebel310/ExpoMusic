@@ -25,3 +25,5 @@ secrets.yml
 Thumbs.db
 
 assets
+
+test.py

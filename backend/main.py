@@ -27,7 +27,6 @@ def custom_openapi():
         description="API for users",
         routes=app.routes,
     )
-    # Добавляем поддержку Bearer Token в Swagger UI
     openapi_schema["components"]["securitySchemes"] = {
         "Bearer": {
             "type": "http",
@@ -35,7 +34,6 @@ def custom_openapi():
             "bearerFormat": "JWT"
         }
     }
-    # Указываем, что маршруты /auth/me требуют авторизации
     if "/auth/me" in openapi_schema["paths"]:
         openapi_schema["paths"]["/auth/me"]["get"]["security"] = [{"Bearer": []}]
         openapi_schema["paths"]["/auth/logout"]["post"]["security"] = [{"Bearer": []}]
@@ -51,7 +49,7 @@ app.include_router(auth_router)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://127.0.0.1:5500"],  # Укажи адрес фронтенда
+    allow_origins=["http://127.0.0.1:5500"],  # Тут адрес фронтенда
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
