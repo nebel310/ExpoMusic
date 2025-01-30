@@ -12,10 +12,6 @@ class SUserRegister(BaseModel):
     is_confirmed: bool = False
 
 
-class SUserConfirm(BaseModel):
-    is_confirmed: bool= True
-
-
 class SUserLogin(BaseModel):
     email: EmailStr
     password: str

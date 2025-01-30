@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from database import new_session, UserOrm, RefreshTokenOrm, BlacklistedTokenOrm
-from schemas import SUserRegister, SUserConfirm
+from schemas import SUserRegister
 from sqlalchemy import select, delete
 from passlib.context import CryptContext
 from jose import jwt, JWTError
@@ -45,23 +45,20 @@ class UserRepository:
             return user.id
     
     @classmethod
-    async def confirm_email(cls, token:str) -> bool:
+    async def confirm_email(cls, token:str, email:str) -> bool:
         async with new_session() as session:
-            # query = select(UserOrm).where(UserOrm.email == user_data.email).one_or_none()
-            # result = await session.execute(query)
-            #email = confirm_email_token(token)
-            # if not email:
-            #     return {"message": "Неверный или просроченый токен"}
-            
-            # if result.scalars().first() is None:
-            #     return {"message": "Пользователь не найден"}
-            email = confirm_email_token(token)
-            query = select(UserOrm).where(UserOrm.email == email)
+            email_from_token = confirm_email_token(token)
+            query = select(UserOrm).where(UserOrm.email == email_from_token)
             result = await session.execute(query)
             user = result.scalars().first()
             
             if user:
                 user.is_confirmed = True
+                
+            elif not user and email_from_token is None:
+                new_token = generate_email_token(email)
+                send_confirmation_email(email, new_token)
+                raise ValueError('Ссылка просрочена, на почту отправлена новая')
             
             await session.flush()
             await session.commit()

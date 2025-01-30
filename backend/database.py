@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import ForeignKey, DateTime, delete, select
+from sqlalchemy import ForeignKey, DateTime
 
 
 

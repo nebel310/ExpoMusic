@@ -4,6 +4,7 @@ import smtplib
 from email.mime.text import MIMEText
 from typing import Optional
 from itsdangerous import URLSafeTimedSerializer
+from itsdangerous.exc import SignatureExpired
 
 
 
@@ -34,13 +35,15 @@ def confirm_email_token(token: str, expiration=3600) -> Optional[str]:
             max_age=expiration
         )
         return email
-    except:
+    except SignatureExpired:
         return None
+    except:
+        return False
 
 
 def send_confirmation_email(email: str, token: str):
     subject = "Подтвердите почту"
-    body = f"Чтобы подтвержить почту перейдите по ссылке: http://127.0.0.1:8000/auth/confirm/{token}"
+    body = f"Чтобы подтвержить почту перейдите по ссылке: http://127.0.0.1:8000/auth/confirm/token={token}/email={email}"
     
     msg = MIMEText(body)
     msg['Subject'] = subject
