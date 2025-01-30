@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from schemas import SUserRegister, SUserLogin, SUser
 from repositories.auth import UserRepository
-from database import UserOrm
+from models.auth import UserOrm
 from security import create_access_token, get_current_user, oauth2_scheme
 
 
@@ -39,7 +39,7 @@ async def login_user(login_data: SUserLogin):
     
     access_token = create_access_token(data={"sub": user.email})
     refresh_token = await UserRepository.create_refresh_token(user.id)
-    return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
+    return {"success": True, "message": "Вы вошли в аккаунт", "access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
 
 
 @router.post("/refresh")

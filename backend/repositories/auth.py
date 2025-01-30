@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
-from database import new_session, UserOrm, RefreshTokenOrm, BlacklistedTokenOrm
+from database import new_session
+from models.auth import UserOrm, RefreshTokenOrm, BlacklistedTokenOrm
 from schemas import SUserRegister
 from sqlalchemy import select, delete
 from passlib.context import CryptContext

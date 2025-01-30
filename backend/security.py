@@ -4,7 +4,8 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from datetime import datetime, timedelta, timezone
-from database import new_session, BlacklistedTokenOrm, UserOrm
+from database import new_session
+from models.auth import BlacklistedTokenOrm, UserOrm
 from sqlalchemy import select, delete
 from repositories.auth import UserRepository
 
