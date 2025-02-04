@@ -29,14 +29,55 @@
   </header>
 
   <main class="profile">
-    <div class="profile__container">
-      <h1 class="profile__title">Профиль</h1>
-      <div class="profile__info">
-        <p><strong>Имя пользователя:</strong> <span id="profile-username"></span></p>
-        <p><strong>Email:</strong> <span id="profile-email"></span></p>
-        <p><strong>Дата регистрации:</strong> <span id="profile-created-at"></span></p>
+    <div class="profile-container">
+      <div class="profile-header">
+          <div class="avatar-container">
+              <img src="../assets/images/placeholder-avatar.jpg" alt="Аватар" class="avatar">
+              <div class="avatar-upload">
+                  <i class="fas fa-camera"></i>
+              </div>
+          </div>
+          <h1>Профиль пользователя</h1>
       </div>
-    </div>
+  
+      <div class="profile-info">
+          <form id="profile-form">
+              <div class="info-group">
+                  <label>Имя пользователя</label>
+                  <input type="text" class="info-input" value="User123" disabled>
+              </div>
+              
+              <div class="info-group">
+                  <label>Электронная почта</label>
+                  <input type="email" class="info-input" value="user@example.com" disabled>
+              </div>
+  
+              <div class="info-group">
+                  <label>Новый пароль</label>
+                  <input type="password" class="info-input" placeholder="Введите новый пароль" disabled>
+              </div>
+  
+              <div class="profile-actions">
+                  <button type="button" class="save-button">Сохранить изменения</button>
+              </div>
+          </form>
+      </div>
+  
+      <div class="profile-stats">
+          <div class="stat-item">
+              <span class="stat-label">Дата регистрации:</span>
+              <span class="stat-value" id="profile-created-at">01.01.2023</span>
+          </div>
+          <div class="stat-item">
+              <span class="stat-label">Треков загружено:</span>
+              <span class="stat-value">0</span>
+          </div>
+          <div class="stat-item">
+              <span class="stat-label">Плейлистов создано:</span>
+              <span class="stat-value">0</span>
+          </div>
+      </div>
+  </div>
   </main>
 
   <script src="../scripts/profile.js"></script>

@@ -1,91 +1,108 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const token = localStorage.getItem("access_token");
+  let token = localStorage.getItem("access_token");
   if (!token) {
     window.location.href = "../index.html";
     return;
   }
 
-  // Функция для сохранения flash-сообщений
-  const saveFlashMessage = (message, type = "success") => {
-    localStorage.setItem("flash_message", JSON.stringify({ message, type }));
-  };
-
-  // Функция для отображения flash-уведомлений
-  const showFlashMessage = (message, type = "success") => {
-    const flashContainer = document.createElement("div");
-    flashContainer.className = `flash-message ${type}`;
-    flashContainer.textContent = message;
-    document.body.appendChild(flashContainer);
-
-    setTimeout(() => flashContainer.remove(), 3000);
-  };
-
-  // Показываем сохраненное сообщение
-  const flashData = localStorage.getItem("flash_message");
-  if (flashData) {
+  // Функция для обновления токена (без автоматического логаута)
+  const refreshAccessToken = async () => {
     try {
-      const { message, type } = JSON.parse(flashData);
-      showFlashMessage(message, type);
-      localStorage.removeItem("flash_message");
-    } catch (e) {
-      console.error("Ошибка парсинга сообщения:", e);
-    }
-  }
-
-  // Функция для выхода
-  const logout = async () => {
-    try {
-      const response = await fetch("http://127.0.0.1:8000/auth/logout", {
+      const refreshToken = localStorage.getItem("refresh_token");
+      if (!refreshToken) return null;
+  
+      // Исправленный запрос
+      const response = await fetch("http://127.0.0.1:8000/auth/refresh", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/x-www-form-urlencoded",
         },
+        body: `refresh_token=${encodeURIComponent(refreshToken)}`
       });
-
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("refresh_token");
-
+  
       if (response.ok) {
-        saveFlashMessage("Выход выполнен успешно!", "success");
-      } else {
-        saveFlashMessage("Ошибка сервера при выходе", "error");
+        const data = await response.json();
+        localStorage.setItem("access_token", data.access_token);
+        return data.access_token;
       }
+      return null;
     } catch (error) {
-      saveFlashMessage("Ошибка сети", "error");
-    } finally {
-      window.location.href = "../index.html";
+      console.error("Ошибка обновления токена:", error);
+      return null;
     }
   };
 
-  // Обработчик кнопки выхода
-  const logoutButton = document.getElementById("logout-button");
-  if (logoutButton) {
-    logoutButton.addEventListener("click", (e) => {
-      e.preventDefault();
-      logout();
-    });
-  }
+  // Модифицированная функция загрузки данных
+  const loadUserData = async () => {
+    try {
+      let response = await fetch("http://127.0.0.1:8000/auth/me", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
-  // Загрузка данных пользователя
-  fetch("http://127.0.0.1:8000/auth/me", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  })
-    .then(response => {
-      if (!response.ok) throw new Error("Ошибка авторизации");
-      return response.json();
-    })
-    .then(userData => {
+      if (response.status === 401) {
+        const newToken = await refreshAccessToken();
+        if (newToken) {
+          token = newToken;
+          response = await fetch("http://127.0.0.1:8000/auth/me", {
+            headers: { Authorization: `Bearer ${newToken}` }
+          });
+        } else {
+          // Перенаправляем на вход без логаута
+          localStorage.setItem("flash_message", JSON.stringify({
+            message: "Требуется повторная авторизация",
+            type: "error"
+          }));
+          window.location.href = "../pages/login.html";
+          return;
+        }
+      }
+
+      if (!response.ok) throw new Error("Ошибка загрузки данных");
+
+      const userData = await response.json();
       document.getElementById("profile-username").textContent = userData.username;
       document.getElementById("profile-email").textContent = userData.email;
       document.getElementById("profile-created-at").textContent = 
         new Date(userData.created_at).toLocaleDateString();
-    })
-    .catch(error => {
+
+    } catch (error) {
       console.error("Ошибка:", error);
+      // Не вызываем logout, только показываем ошибку
+      showFlashMessage("Ошибка загрузки данных профиля", "error");
+    }
+  };
+
+  // Функция выхода ТОЛЬКО при явном клике
+  const logout = async () => {
+    try {
+      await fetch("http://127.0.0.1:8000/auth/logout", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+    } catch (error) {
+      console.error("Ошибка при выходе:", error);
+    } finally {
       localStorage.removeItem("access_token");
       localStorage.removeItem("refresh_token");
       window.location.href = "../index.html";
-    });
+    }
+  };
+
+  // Инициализация
+  loadUserData();
+  
+  // Обработчики событий
+  document.getElementById("logout-button")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    logout();
+  });
+
+  document.querySelector('.save-button')?.addEventListener('click', () => {
+    const flashContainer = document.createElement('div');
+    flashContainer.className = 'flash-message info';
+    flashContainer.textContent = 'Изменение данных временно недоступно';
+    document.body.appendChild(flashContainer);
+    
+    setTimeout(() => flashContainer.remove(), 3000);
+  });
 });
