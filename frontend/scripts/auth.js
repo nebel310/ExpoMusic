@@ -54,34 +54,24 @@ document.addEventListener("DOMContentLoaded", () => {
   // Функция для обновления access_token
   const refreshAccessToken = async () => {
     const refreshToken = localStorage.getItem("refresh_token");
-    if (!refreshToken) {
-      removeTokens();
-      window.location.href = "/frontend/pages/login.html";
-      return null;
-    }
-
+    if (!refreshToken) return null;
+  
     try {
       const response = await fetch("http://127.0.0.1:8000/auth/refresh", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ refresh_token: refreshToken }),
+        body: JSON.stringify({ refresh_token: refreshToken })
       });
-
+  
       if (response.ok) {
         const data = await response.json();
-        saveTokens(data.access_token, refreshToken); // Сохраняем новый access_token
+        localStorage.setItem("access_token", data.access_token);
         return data.access_token;
-      } else {
-        removeTokens();
-        window.location.href = "/frontend/pages/login.html";
-        return null;
       }
     } catch (error) {
-      console.error("Ошибка при обновлении токена:", error);
-      removeTokens();
-      window.location.href = "/frontend/pages/login.html";
-      return null;
+      console.error("Ошибка обновления токена:", error);
     }
+    return null;
   };
 
   // Функция для выполнения запросов с автоматическим обновлением токена
@@ -122,32 +112,34 @@ document.addEventListener("DOMContentLoaded", () => {
         email: formData.get("email"),
         password: formData.get("password"),
         password_confirm: formData.get("password_confirm"),
+        is_confirmed: false
       };
-
-      // Проверка совпадения паролей
+    
       if (data.password !== data.password_confirm) {
         showError("Пароли не совпадают");
         return;
       }
-
+    
       try {
         const response = await fetch("http://127.0.0.1:8000/auth/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
+          body: JSON.stringify(data)
         });
-
+    
+        const responseData = await response.json();
+        
         if (response.ok) {
-          const result = await response.json();
-          saveFlashMessage("Регистрация прошла успешно!");
-          window.location.href = "/frontend/pages/login.html"; // Мгновенный редирект
+          localStorage.setItem("flash_message", JSON.stringify({
+            message: responseData.message,
+            type: "success"
+          }));
+          window.location.href = "login.html";
         } else {
-          const errorData = await response.json();
-          showError(errorData.message || "Ошибка регистрации");
+          showError(responseData.detail || "Ошибка регистрации");
         }
       } catch (error) {
-        console.error("Ошибка:", error);
-        showError("Произошла ошибка при регистрации");
+        showError("Ошибка сети");
       }
     });
   }
@@ -159,28 +151,31 @@ document.addEventListener("DOMContentLoaded", () => {
       const formData = new FormData(loginForm);
       const data = {
         email: formData.get("email"),
-        password: formData.get("password"),
+        password: formData.get("password")
       };
-
+    
       try {
         const response = await fetch("http://127.0.0.1:8000/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
+          body: JSON.stringify(data)
         });
-
+    
+        const responseData = await response.json();
+        
         if (response.ok) {
-          const result = await response.json();
-          saveTokens(result.access_token, result.refresh_token); // Сохраняем токены
-          saveFlashMessage("Вход выполнен успешно!");
-          window.location.href = "/frontend/index.html"; // Мгновенный редирект
+          localStorage.setItem("access_token", responseData.access_token);
+          localStorage.setItem("refresh_token", responseData.refresh_token);
+          localStorage.setItem("flash_message", JSON.stringify({
+            message: responseData.message,
+            type: "success"
+          }));
+          window.location.href = "../index.html";
         } else {
-          const errorData = await response.json();
-          showError(errorData.detail || "Ошибка входа");
+          showError(responseData.detail || "Ошибка входа");
         }
       } catch (error) {
-        console.error("Ошибка:", error);
-        showError("Произошла ошибка при входе");
+        showError("Ошибка сети");
       }
     });
   }

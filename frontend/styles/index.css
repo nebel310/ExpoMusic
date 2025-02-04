@@ -233,3 +233,141 @@
 .footer__link:hover, .footer__social-link:hover {
   color: var(--text-color);
 }
+
+/* Анимированный визуализатор */
+.hero {
+  position: relative;
+  height: 100vh;
+  overflow: hidden;
+  background: linear-gradient(135deg, #1a1a1a, #121212);
+}
+
+.hero__visualizer {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.visualizer-circle {
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: rgba(29, 185, 84, 0.1);
+  animation: pulse 2s infinite;
+}
+
+.visualizer-waves {
+  position: absolute;
+  width: 350px;
+  height: 350px;
+  border-radius: 50%;
+  border: 2px solid rgba(29, 185, 84, 0.3);
+  animation: wave 3s infinite;
+}
+
+.hero__play-button {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.hero__play-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(29, 185, 84, 0.5);
+}
+
+.hero__play-button svg {
+  fill: white;
+  margin-left: 4px;
+}
+
+@keyframes pulse {
+  0% { transform: scale(0.8); opacity: 0.8; }
+  50% { transform: scale(1.2); opacity: 0.4; }
+  100% { transform: scale(0.8); opacity: 0.8; }
+}
+
+@keyframes wave {
+  0% { transform: scale(0.9); opacity: 1; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+/* Улучшаем карточки в стиле Spotify */
+.featured__card, .new-releases__card, .popular-playlists__card {
+  background: #181818;
+  border-radius: 8px;
+  padding: 15px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.featured__card:hover, 
+.new-releases__card:hover, 
+.popular-playlists__card:hover {
+  background: #282828;
+  transform: translateY(-5px);
+}
+
+.new-releases__card-play {
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+  width: 40px;
+  height: 40px;
+  background: var(--primary-color);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+.new-releases__card:hover .new-releases__card-play {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.visualizer-waves {
+  position: absolute;
+  width: 350px;
+  height: 350px;
+  border-radius: 50%;
+  border: 2px solid;
+  animation: wave 3s infinite;
+  transform-origin: center;
+}
+
+@keyframes wave {
+  0% { transform: scale(0.9); opacity: 1; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+/* Адаптивность для мобильных */
+@media (max-width: 768px) {
+  .hero__title {
+    font-size: 2rem;
+  }
+  
+  .header__nav {
+    display: none;
+  }
+  
+  .featured__grid, 
+  .popular-playlists__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

@@ -5,34 +5,34 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
+  // Функция для сохранения flash-сообщений
+  const saveFlashMessage = (message, type = "success") => {
+    localStorage.setItem("flash_message", JSON.stringify({ message, type }));
+  };
+
   // Функция для отображения flash-уведомлений
   const showFlashMessage = (message, type = "success") => {
     const flashContainer = document.createElement("div");
     flashContainer.className = `flash-message ${type}`;
     flashContainer.textContent = message;
-
     document.body.appendChild(flashContainer);
 
-    // Автоматическое удаление уведомления через 3 секунды
-    setTimeout(() => {
-      flashContainer.remove();
-    }, 3000);
+    setTimeout(() => flashContainer.remove(), 3000);
   };
 
-  // Функция для отображения сохраненного flash-сообщения
-  const showSavedFlashMessage = () => {
-    const flashData = localStorage.getItem("flash_message");
-    if (flashData) {
+  // Показываем сохраненное сообщение
+  const flashData = localStorage.getItem("flash_message");
+  if (flashData) {
+    try {
       const { message, type } = JSON.parse(flashData);
       showFlashMessage(message, type);
-      localStorage.removeItem("flash_message"); // Удаляем сообщение после отображения
+      localStorage.removeItem("flash_message");
+    } catch (e) {
+      console.error("Ошибка парсинга сообщения:", e);
     }
-  };
+  }
 
-  // Показываем сохраненное сообщение при загрузке страницы
-  showSavedFlashMessage();
-
-  // Функция для выхода из системы
+  // Функция для выхода
   const logout = async () => {
     try {
       const response = await fetch("http://127.0.0.1:8000/auth/logout", {
@@ -42,48 +42,47 @@ document.addEventListener("DOMContentLoaded", () => {
         },
       });
 
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+
       if (response.ok) {
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
-        saveFlashMessage("Выход выполнен успешно!");
-        window.location.href = "../index.html"; // Мгновенный редирект
+        saveFlashMessage("Выход выполнен успешно!", "success");
       } else {
-        showFlashMessage("Ошибка при выходе", "error");
+        saveFlashMessage("Ошибка сервера при выходе", "error");
       }
     } catch (error) {
-      console.error("Ошибка:", error);
-      showFlashMessage("Произошла ошибка при выходе", "error");
+      saveFlashMessage("Ошибка сети", "error");
+    } finally {
+      window.location.href = "../index.html";
     }
   };
 
-  // Обработчик для кнопки выхода
+  // Обработчик кнопки выхода
   const logoutButton = document.getElementById("logout-button");
   if (logoutButton) {
-    logoutButton.addEventListener("click", logout);
+    logoutButton.addEventListener("click", (e) => {
+      e.preventDefault();
+      logout();
+    });
   }
 
   // Загрузка данных пользователя
   fetch("http://127.0.0.1:8000/auth/me", {
-    method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
     },
   })
-    .then((response) => {
-      if (response.ok) {
-        return response.json();
-      } else {
-        throw new Error("Не удалось получить данные пользователя");
-      }
+    .then(response => {
+      if (!response.ok) throw new Error("Ошибка авторизации");
+      return response.json();
     })
-    .then((userData) => {
+    .then(userData => {
       document.getElementById("profile-username").textContent = userData.username;
       document.getElementById("profile-email").textContent = userData.email;
-      document.getElementById("profile-created-at").textContent = new Date(
-        userData.created_at
-      ).toLocaleDateString();
+      document.getElementById("profile-created-at").textContent = 
+        new Date(userData.created_at).toLocaleDateString();
     })
-    .catch((error) => {
+    .catch(error => {
       console.error("Ошибка:", error);
       localStorage.removeItem("access_token");
       localStorage.removeItem("refresh_token");
