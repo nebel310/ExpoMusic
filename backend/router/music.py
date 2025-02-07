@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
-from schemas import STrack, STrackUpload, SPlaylist
-from repositories.music import TrackRepository
-from models.music import TrackOrm
+from schemas import STrack, STrackUpload, SGenre, SAddGenre
+from repositories.music import TrackRepository, GenreRepository
 from models.auth import UserOrm
 from security import get_current_user
 
@@ -13,18 +12,17 @@ track_router = APIRouter(
     tags=['Треки']
 )
 
-playlist_router = APIRouter(
-    prefix="/playlists",
-    tags=['Плейлисты']
+genre_router = APIRouter(
+    prefix="/genres",
+    tags=['Жанры']
 )
 
 
-#TODO:
-# GET /api/tracks — Получить список всех треков. + 
-# POST /api/tracks — Загрузить новый трек. + 
-# GET /api/tracks/{track_id} — Получить информацию о треке. + 
-# DELETE /api/tracks/{track_id} — Удалить трек. +
 
+'''
+----------------------------------------------
+Маршруты треков
+'''
 
 @track_router.get("", response_model=list[STrack])
 async def get_all_tracks(limit: int=10, offset: int=0):
@@ -60,3 +58,31 @@ async def delete_track(track_id: int):
         return {"success": True, "message": "Трек удалён"}
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+'''
+----------------------------------------------
+'''
+
+
+
+'''
+----------------------------------------------
+Маршруты жанров
+'''
+
+@genre_router.get("", response_model=list[SGenre])
+async def get_all_genres(limit: int=10, offset: int=0):
+    try:
+        genres = await GenreRepository.get_all_genres(limit, offset)
+        return [SGenre.model_validate(genre) for genre in genres]
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@genre_router.post("")
+async def add_genre(genre_data: SAddGenre):
+    try:
+        await GenreRepository.add_genre(genre_data)
+        return {"success": True, "message": "Жанр создан"}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))

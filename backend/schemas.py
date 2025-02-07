@@ -1,6 +1,5 @@
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, EmailStr
-from fastapi import UploadFile
 
 
 
@@ -30,6 +29,17 @@ class SUserLogin(BaseModel):
     password: str
 
 
+class SRefresh(BaseModel):
+    token: str
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "token": "my_refresh_token"
+            }
+        }
+
+
 
 
 class STrack(BaseModel):
@@ -37,20 +47,30 @@ class STrack(BaseModel):
     uploaded_by: int
     title: str
     artist: str
-    file: UploadFile
-    duration: int = 60 #секунды
-    playlists: list | None = None
+    genre_id: int
+    
+    model_config = ConfigDict(from_attributes=True)
 
 
 class STrackUpload(BaseModel):
     title: str
     artist: str
-    file: UploadFile
-    genre: str
+    genre_id: int
 
 
-class SPlaylist(BaseModel):
+class SGenre(BaseModel):
     id: int
-    created_by: int
-    title: str
-    tracks: list | None = None
+    name: str
+    
+    model_config = ConfigDict(from_attributes=True)
+    
+
+class SAddGenre(BaseModel):
+    name: str
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "name": "NoGenre"
+            }
+        }

@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from database import create_tables, delete_tables
 from router.auth import router as auth_router
-from router.music import track_router
+from router.music import track_router, genre_router
 
 
 
@@ -48,6 +48,7 @@ app = FastAPI(lifespan=lifespan)
 app.openapi = custom_openapi
 app.include_router(auth_router)
 app.include_router(track_router)
+app.include_router(genre_router)
 
 
 app.add_middleware(

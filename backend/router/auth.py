@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from schemas import SUserRegister, SUserLogin, SUser
+from schemas import SUserRegister, SUserLogin, SUser, SRefresh
 from repositories.auth import UserRepository
 from models.auth import UserOrm
 from security import create_access_token, get_current_user, oauth2_scheme
@@ -43,8 +43,8 @@ async def login_user(login_data: SUserLogin):
 
 
 @router.post("/refresh")
-async def refresh_token(refresh_token: str):
-    user = await UserRepository.get_user_by_refresh_token(refresh_token)
+async def refresh_token(refresh_token: SRefresh):
+    user = await UserRepository.get_user_by_refresh_token(refresh_token.token)
     if not user:
         raise HTTPException(status_code=400, detail="Неверный refresh токен")
     
