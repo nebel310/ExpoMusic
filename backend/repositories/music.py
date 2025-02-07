@@ -17,6 +17,15 @@ class TrackRepository:
     
     
     @classmethod
+    async def get_tracks_by_genre_id(cls, genre_id: int, limit: int, offset: int):
+        async with new_session() as session:
+            query = select(TrackOrm).where(TrackOrm.genre_id == genre_id).limit(limit).offset(offset)
+            result = await session.execute(query)
+            tracks = result.scalars().all()
+            return tracks
+    
+    
+    @classmethod
     async def get_track_by_id(cls, track_id:int) -> STrack | None:
         async with new_session() as session:
             query = select(TrackOrm).where(TrackOrm.id == track_id)

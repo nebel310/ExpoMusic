@@ -51,6 +51,15 @@ async def get_track_by_id(track_id: int):
         raise HTTPException(status_code=404, detail=str(e))
 
 
+@track_router.get("/genres/{genre_id}", response_model=list[STrack])
+async def get_tracks_by_genre_id(genre_id: int, limit: int=10, offset: int=0):
+    try:
+        tracks = await TrackRepository.get_tracks_by_genre_id(genre_id, limit, offset)
+        return [STrack.model_validate(track) for track in tracks]
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 @track_router.delete("/{track_id}") #Маршрут будет доступен только администраторам
 async def delete_track(track_id: int):
     try:
