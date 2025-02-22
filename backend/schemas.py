@@ -74,3 +74,31 @@ class SAddGenre(BaseModel):
                 "name": "NoGenre"
             }
         }
+
+
+
+class SPlaylist(BaseModel):
+    id: int
+    user_id: int
+    name: str
+    is_public: bool
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+class SPlaylistCreate(BaseModel):
+    name: str
+    is_public: bool = False
+
+class SPlaylistUpdate(BaseModel):
+    name: str | None = None
+    is_public: bool | None = None
+
+class SPlaylistTrack(BaseModel):
+    playlist_id: int
+    track_id: int
+
+
+class SSuccessResponse(BaseModel):
+    success: bool
+    message: str
