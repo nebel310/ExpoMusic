@@ -114,39 +114,53 @@ async def add_genre(genre_data: SAddGenre):
 
 @playlist_router.post("", response_model=SPlaylist)
 async def create_playlist(playlist_data: SPlaylistCreate, current_user: UserOrm = Depends(get_current_user)):
-    playlist = await PlaylistRepository.create_playlist(playlist_data, current_user.id)
-    return SPlaylist.model_validate(playlist)
+    try:
+        playlist = await PlaylistRepository.create_playlist(playlist_data, current_user.id)
+        return SPlaylist.model_validate(playlist)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @playlist_router.get("/{playlist_id}", response_model=SPlaylist)
 async def get_playlist(playlist_id: int):
-    playlist = await PlaylistRepository.get_playlist_by_id(playlist_id)
-    if not playlist:
-        raise HTTPException(status_code=404, detail="Плейлист не найден")
-    return SPlaylist.model_validate(playlist)
+    try:
+        playlist = await PlaylistRepository.get_playlist_by_id(playlist_id)
+        return SPlaylist.model_validate(playlist)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
 
 @playlist_router.put("/{playlist_id}", response_model=SPlaylist)
 async def update_playlist(playlist_id: int, playlist_data: SPlaylistUpdate, current_user: UserOrm = Depends(get_current_user)):
-    playlist = await PlaylistRepository.update_playlist(playlist_id, playlist_data)
-    if not playlist:
-        raise HTTPException(status_code=404, detail="Плейлист не найден")
-    return SPlaylist.model_validate(playlist)
+    try:
+        playlist = await PlaylistRepository.update_playlist(playlist_id, playlist_data)
+        return SPlaylist.model_validate(playlist)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
 
 @playlist_router.delete("/{playlist_id}")
 async def delete_playlist(playlist_id: int, current_user: UserOrm = Depends(get_current_user)):
-    await PlaylistRepository.delete_playlist(playlist_id)
-    return {"success": True, "message": "Плейлист удалён"}
+    try:
+        await PlaylistRepository.delete_playlist(playlist_id)
+        return {"success": True, "message": "Плейлист удалён"}
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
 
 @playlist_router.post("/add-track")
 async def add_track_to_playlist(playlist_track_data: SPlaylistTrack, current_user: UserOrm = Depends(get_current_user)):
-    await PlaylistRepository.add_track_to_playlist(playlist_track_data)
-    return {"success": True, "message": "Трек добавлен в плейлист"}
+    try:
+        await PlaylistRepository.add_track_to_playlist(playlist_track_data)
+        return {"success": True, "message": "Трек добавлен в плейлист"}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @playlist_router.post("/remove-track", response_model=SSuccessResponse)
 async def remove_track_from_playlist(playlist_track_data: SPlaylistTrack, current_user: UserOrm = Depends(get_current_user)):
-    await PlaylistRepository.remove_track_from_playlist(playlist_track_data)
-    return {"success": True, "message": "Трек удалён из плейлиста"}
+    try:
+        await PlaylistRepository.remove_track_from_playlist(playlist_track_data)
+        return {"success": True, "message": "Трек удалён из плейлиста"}
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))

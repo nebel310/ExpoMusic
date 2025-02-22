@@ -41,11 +41,17 @@ class TrackRepository:
     @classmethod
     async def upload_new_track(cls, track_data: STrackUpload, uploaded_by: int):
         async with new_session() as session:
-            query = select(TrackOrm).where(TrackOrm.title == track_data.title)
-            result = await session.execute(query)
+            query1 = select(TrackOrm).where(TrackOrm.title == track_data.title)
+            result1 = await session.execute(query1)
             
-            if result.scalars().first():
-                raise ValueError('Трек с таким названием уже существует')            
+            if result1.scalars().first():
+                raise ValueError('Трек с таким названием уже существует')
+            
+            query2 = select(GenreOrm).where(GenreOrm.id == track_data.genre_id)     
+            result2 = await session.execute(query2)
+            
+            if not result2.scalars().first():
+                raise ValueError('Такого жанра не существует')
             
             track = TrackOrm(
                 uploaded_by = uploaded_by,
@@ -126,7 +132,13 @@ class PlaylistRepository:
         async with new_session() as session:
             query = select(PlaylistOrm).where(PlaylistOrm.id == playlist_id)
             result = await session.execute(query)
-            return result.scalars().first()
+            
+            playlist = result.scalars().first()
+            
+            if not playlist:
+                raise ValueError('Плейлист не найден')
+            
+            return playlist
 
 
     @classmethod
@@ -137,10 +149,11 @@ class PlaylistRepository:
             playlist = result.scalars().first()
             
             if not playlist:
-                return None
+                raise ValueError("Плейлист не найден")
             
             if playlist_data.name is not None:
                 playlist.name = playlist_data.name
+            
             if playlist_data.is_public is not None:
                 playlist.is_public = playlist_data.is_public
             
@@ -166,12 +179,15 @@ class PlaylistRepository:
     @classmethod
     async def add_track_to_playlist(cls, playlist_track_data: SPlaylistTrack):
         async with new_session() as session:
-            stmt = playlist_tracks.insert().values(
-                playlist_id=playlist_track_data.playlist_id,
-                track_id=playlist_track_data.track_id
-            )
-            await session.execute(stmt)
-            await session.commit()
+            try:
+                stmt = playlist_tracks.insert().values(
+                    playlist_id=playlist_track_data.playlist_id,
+                    track_id=playlist_track_data.track_id
+                )
+                await session.execute(stmt)
+                await session.commit()
+            except:
+                raise ValueError("Нельзя добавить в плейлисты одинаковые треки")
 
 
     @classmethod
@@ -181,5 +197,9 @@ class PlaylistRepository:
                 (playlist_tracks.c.playlist_id == playlist_track_data.playlist_id) &
                 (playlist_tracks.c.track_id == playlist_track_data.track_id)
             )
-            await session.execute(stmt)
+            result = await session.execute(stmt)
+            
+            if result.rowcount == 0:
+                raise ValueError('Трек в этом плейлисте не найден')
+            
             await session.commit()
