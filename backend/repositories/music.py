@@ -1,5 +1,5 @@
 from database import new_session
-from models.music import TrackOrm, GenreOrm, PlaylistOrm, playlist_tracks
+from models.music import TrackOrm, GenreOrm, PlaylistOrm, playlist_tracks, FavoriteTrackOrm, DislikedTrackOrm, SavedPlaylistOrm
 from schemas import STrack, STrackUpload, SAddGenre, SPlaylist, SPlaylistCreate, SPlaylistUpdate, SPlaylistTrack
 from sqlalchemy import select, delete
 
@@ -203,3 +203,136 @@ class PlaylistRepository:
                 raise ValueError('Трек в этом плейлисте не найден')
             
             await session.commit()
+    
+    
+    @classmethod
+    async def get_playlist_with_tracks(cls, playlist_id: int) -> dict:
+        async with new_session() as session:
+            query = (
+                select(PlaylistOrm, TrackOrm.id)
+                .join(playlist_tracks, PlaylistOrm.id == playlist_tracks.c.playlist_id)
+                .join(TrackOrm, TrackOrm.id == playlist_tracks.c.track_id)
+                .where(PlaylistOrm.id == playlist_id)
+            )
+            
+            result = await session.execute(query)
+            rows = result.all()
+            
+            if not rows:
+                raise ValueError('Плейлист не найден')
+            
+            playlist = rows[0][0]
+            track_ids = [row[1] for row in rows]
+            
+            return {
+                "id": playlist.id,
+                "user_id": playlist.user_id,
+                "name": playlist.name,
+                "is_public": playlist.is_public,
+                "created_at": playlist.created_at,
+                "track_ids": track_ids
+            }
+
+
+
+
+class FavoriteTrackRepository:
+    @classmethod
+    async def add_to_favorites(cls, user_id: int, track_id: int):
+        async with new_session() as session:
+            query = select(FavoriteTrackOrm).where(FavoriteTrackOrm.user_id == user_id, FavoriteTrackOrm.track_id == track_id)
+            result = await session.execute(query)
+            if result.scalars().first():
+                raise ValueError("Трек уже в избранном")
+            
+            favorite_track = FavoriteTrackOrm(user_id=user_id, track_id=track_id)
+            session.add(favorite_track)
+            await session.commit()
+
+    @classmethod
+    async def remove_from_favorites(cls, user_id: int, track_id: int):
+        async with new_session() as session:
+            query = delete(FavoriteTrackOrm).where(FavoriteTrackOrm.user_id == user_id, FavoriteTrackOrm.track_id == track_id)
+            result = await session.execute(query)
+            if result.rowcount == 0:
+                raise ValueError("Трек не найден в избранном")
+            await session.commit()
+
+    @classmethod
+    async def get_favorite_tracks(cls, user_id: int, limit: int, offset: int) -> list:
+        async with new_session() as session:
+            query = select(TrackOrm).join(FavoriteTrackOrm).where(FavoriteTrackOrm.user_id == user_id).limit(limit).offset(offset)
+            result = await session.execute(query)
+            return result.scalars().all()
+    
+    @classmethod
+    async def get_all_genres(cls, limit: int, offset: int) -> list:
+        async with new_session() as session:
+            query = select(GenreOrm).limit(limit).offset(offset)
+            result = await session.execute(query)
+            genres = result.scalars().all()
+            return genres
+
+
+
+
+class DislikedTrackRepository:
+    @classmethod
+    async def add_to_disliked(cls, user_id: int, track_id: int):
+        async with new_session() as session:
+            query = select(DislikedTrackOrm).where(DislikedTrackOrm.user_id == user_id, DislikedTrackOrm.track_id == track_id)
+            result = await session.execute(query)
+            if result.scalars().first():
+                raise ValueError("Трек уже в списке 'Не нравится'")
+            
+            disliked_track = DislikedTrackOrm(user_id=user_id, track_id=track_id)
+            session.add(disliked_track)
+            await session.commit()
+
+    @classmethod
+    async def remove_from_disliked(cls, user_id: int, track_id: int):
+        async with new_session() as session:
+            query = delete(DislikedTrackOrm).where(DislikedTrackOrm.user_id == user_id, DislikedTrackOrm.track_id == track_id)
+            result = await session.execute(query)
+            if result.rowcount == 0:
+                raise ValueError("Трек не найден в списке 'Не нравится'")
+            await session.commit()
+
+    @classmethod
+    async def get_disliked_tracks(cls, user_id: int, limit: int, offset: int) -> list:
+        async with new_session() as session:
+            query = select(TrackOrm).join(DislikedTrackOrm).where(DislikedTrackOrm.user_id == user_id).limit(limit).offset(offset)
+            result = await session.execute(query)
+            return result.scalars().all()
+
+
+
+
+class SavedPlaylistRepository:
+    @classmethod
+    async def save_playlist(cls, user_id: int, playlist_id: int):
+        async with new_session() as session:
+            query = select(SavedPlaylistOrm).where(SavedPlaylistOrm.user_id == user_id, SavedPlaylistOrm.playlist_id == playlist_id)
+            result = await session.execute(query)
+            if result.scalars().first():
+                raise ValueError("Плейлист уже сохранен")
+            
+            saved_playlist = SavedPlaylistOrm(user_id=user_id, playlist_id=playlist_id)
+            session.add(saved_playlist)
+            await session.commit()
+
+    @classmethod
+    async def unsave_playlist(cls, user_id: int, playlist_id: int):
+        async with new_session() as session:
+            query = delete(SavedPlaylistOrm).where(SavedPlaylistOrm.user_id == user_id, SavedPlaylistOrm.playlist_id == playlist_id)
+            result = await session.execute(query)
+            if result.rowcount == 0:
+                raise ValueError("Плейлист не найден в сохраненных")
+            await session.commit()
+
+    @classmethod
+    async def get_saved_playlists(cls, user_id: int, limit: int, offset: int) -> list:
+        async with new_session() as session:
+            query = select(PlaylistOrm).join(SavedPlaylistOrm).where(SavedPlaylistOrm.user_id == user_id).limit(limit).offset(offset)
+            result = await session.execute(query)
+            return result.scalars().all()

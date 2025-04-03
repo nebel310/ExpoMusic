@@ -83,6 +83,7 @@ class SPlaylist(BaseModel):
     name: str
     is_public: bool
     created_at: datetime
+    track_ids: list[int] = []
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -102,3 +103,31 @@ class SPlaylistTrack(BaseModel):
 class SSuccessResponse(BaseModel):
     success: bool
     message: str
+
+
+
+class SFavoriteTrack(BaseModel):
+    id: int
+    user_id: int
+    track_id: int
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class SDislikedTrack(BaseModel):
+    id: int
+    user_id: int
+    track_id: int
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class SSavedPlaylist(BaseModel):
+    id: int
+    user_id: int
+    playlist_id: int
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)

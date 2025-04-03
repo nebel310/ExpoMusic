@@ -44,3 +44,31 @@ class GenreOrm(Model):
     
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(unique=True, nullable=False)
+
+
+
+class FavoriteTrackOrm(Model):
+    __tablename__ = 'favorite_tracks'
+    
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
+    track_id: Mapped[int] = mapped_column(ForeignKey('tracks.id'))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
+class DislikedTrackOrm(Model):
+    __tablename__ = 'disliked_tracks'
+    
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
+    track_id: Mapped[int] = mapped_column(ForeignKey('tracks.id'))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
+class SavedPlaylistOrm(Model):
+    __tablename__ = 'saved_playlists'
+    
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
+    playlist_id: Mapped[int] = mapped_column(ForeignKey('playlists.id'))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))

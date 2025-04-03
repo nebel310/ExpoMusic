@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from database import create_tables, delete_tables
 from router.auth import router as auth_router
-from router.music import track_router, genre_router, playlist_router
+from router.music import track_router, genre_router, playlist_router, library_router
 
 
 
@@ -37,33 +37,29 @@ def custom_openapi():
         }
     }
     
-    secured_paths = [
-        "/auth/me",
-        "/auth/logout",
-        "/tracks",
-        "/playlists",
-        "/playlists/{playlist_id}",
-        "/playlists/add-track",
-        "/playlists/remove-track"
-    ]
-
-    for path in secured_paths:
+    secured_paths = {
+        "/auth/me": {"method": "get", "security": [{"Bearer": []}]},
+        "/auth/logout": {"method": "post", "security": [{"Bearer": []}]},
+        "/tracks": {"method": "post", "security": [{"Bearer": []}]},
+        "/playlists": {"method": "post", "security": [{"Bearer": []}]},
+        "/playlists/update/{playlist_id}": {"method": "put", "security": [{"Bearer": []}]},
+        "/playlists/remove/{playlist_id}": {"method": "delete", "security": [{"Bearer": []}]},
+        "/playlists/add-track": {"method": "post", "security": [{"Bearer": []}]},
+        "/playlists/remove-track": {"method": "post", "security": [{"Bearer": []}]},
+        "/library/favorites/add/{track_id}": {"method": "post", "security": [{"Bearer": []}]},
+        "/library/favorites/remove/{track_id}": {"method": "post", "security": [{"Bearer": []}]},
+        "/library/favorites": {"method": "get", "security": [{"Bearer": []}]},
+        "/library/disliked/add/{track_id}": {"method": "post", "security": [{"Bearer": []}]},
+        "/library/disliked/remove/{track_id}": {"method": "post", "security": [{"Bearer": []}]},
+        "/library/disliked": {"method": "get", "security": [{"Bearer": []}]},
+        "/library/save/{playlist_id}": {"method": "post", "security": [{"Bearer": []}]},
+        "/library/unsave/{playlist_id}": {"method": "post", "security": [{"Bearer": []}]},
+        "/library/saved": {"method": "get", "security": [{"Bearer": []}]},
+    }
+    
+    for path, config in secured_paths.items():
         if path in openapi_schema["paths"]:
-            if path == "/tracks":
-                openapi_schema["paths"][path]["post"]["security"] = [{"Bearer": []}]
-            elif path == "/playlists":
-                openapi_schema["paths"][path]["post"]["security"] = [{"Bearer": []}]
-            elif path == "/playlists/{playlist_id}":
-                openapi_schema["paths"][path]["put"]["security"] = [{"Bearer": []}]
-                openapi_schema["paths"][path]["delete"]["security"] = [{"Bearer": []}]
-            elif path == "/playlists/add-track":
-                openapi_schema["paths"][path]["post"]["security"] = [{"Bearer": []}]
-            elif path == "/playlists/remove-track":
-                openapi_schema["paths"][path]["post"]["security"] = [{"Bearer": []}]
-            elif path == "/auth/me":
-                openapi_schema["paths"][path]["get"]["security"] = [{"Bearer": []}]
-            elif path == "/auth/logout":
-                openapi_schema["paths"][path]["post"]["security"] = [{"Bearer": []}]
+            openapi_schema["paths"][path][config["method"]]["security"] = config["security"]
     
     app.openapi_schema = openapi_schema
     return app.openapi_schema
@@ -75,6 +71,7 @@ app.include_router(auth_router)
 app.include_router(track_router)
 app.include_router(genre_router)
 app.include_router(playlist_router)
+app.include_router(library_router)
 
 
 app.add_middleware(
