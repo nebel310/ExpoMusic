@@ -68,15 +68,25 @@ class TrackRepository:
     @classmethod
     async def delete_track(cls, track_id: int):
         async with new_session() as session:
-            delete_tracks_query = delete(playlist_tracks).where(playlist_tracks.c.track_id == track_id)
-            await session.execute(delete_tracks_query)
-
-            delete_track_query = delete(TrackOrm).where(TrackOrm.id == track_id)
-            result = await session.execute(delete_track_query)
-
-            if result.rowcount == 0:
+            track = await cls.get_track_by_id(track_id)
+            if not track:
                 raise ValueError('Трек не найден')
-
+            
+            await session.execute(
+                delete(playlist_tracks)
+                .where(playlist_tracks.c.track_id == track_id)
+            )
+            await session.execute(
+                delete(FavoriteTrackOrm)
+                .where(FavoriteTrackOrm.track_id == track_id)
+            )
+            await session.execute(
+                delete(DislikedTrackOrm)
+                .where(DislikedTrackOrm.track_id == track_id)
+            )
+            
+            delete_query = delete(TrackOrm).where(TrackOrm.id == track_id)
+            await session.execute(delete_query)
             await session.commit()
 
 
@@ -179,25 +189,52 @@ class PlaylistRepository:
     @classmethod
     async def add_track_to_playlist(cls, playlist_track_data: SPlaylistTrack):
         async with new_session() as session:
-            try:
-                stmt = playlist_tracks.insert().values(
-                    playlist_id=playlist_track_data.playlist_id,
-                    track_id=playlist_track_data.track_id
-                )
-                await session.execute(stmt)
-                await session.commit()
-            except:
-                raise ValueError("Нельзя добавить в плейлисты одинаковые треки")
+            track_query = select(TrackOrm).where(TrackOrm.id == playlist_track_data.track_id)
+            track_result = await session.execute(track_query)
+            if not track_result.scalars().first():
+                raise ValueError('Трека с таким ID не существует')
+
+            playlist_query = select(PlaylistOrm).where(PlaylistOrm.id == playlist_track_data.playlist_id)
+            playlist_result = await session.execute(playlist_query)
+            if not playlist_result.scalars().first():
+                raise ValueError('Плейлиста с таким ID не существует')
+
+            existing_link_query = select(playlist_tracks).where(
+                (playlist_tracks.c.track_id == playlist_track_data.track_id) &
+                (playlist_tracks.c.playlist_id == playlist_track_data.playlist_id)
+            )
+            existing_link_result = await session.execute(existing_link_query)
+            if existing_link_result.rowcount != 0:
+                raise ValueError('Трек уже добавлен в этот плейлист')
+
+            stmt = playlist_tracks.insert().values(
+                playlist_id=playlist_track_data.playlist_id,
+                track_id=playlist_track_data.track_id
+            )
+            await session.execute(stmt)
+            await session.commit()
 
 
     @classmethod
     async def remove_track_from_playlist(cls, playlist_track_data: SPlaylistTrack):
         async with new_session() as session:
-            stmt = playlist_tracks.delete().where(
+            query = select(TrackOrm).where(TrackOrm.id == playlist_track_data.track_id)
+            result = await session.execute(query)
+            
+            if not result.scalars().first():
+                raise ValueError('Трека с таким ID не существует')
+            
+            query = select(PlaylistOrm).where(PlaylistOrm.id == playlist_track_data.playlist_id)
+            result = await session.execute(query)
+            
+            if not result.scalars().first():
+                raise ValueError('Плейлиста с таким ID не существует')
+            
+            query = playlist_tracks.delete().where(
                 (playlist_tracks.c.playlist_id == playlist_track_data.playlist_id) &
                 (playlist_tracks.c.track_id == playlist_track_data.track_id)
             )
-            result = await session.execute(stmt)
+            result = await session.execute(query)
             
             if result.rowcount == 0:
                 raise ValueError('Трек в этом плейлисте не найден')
