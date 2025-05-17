@@ -11,7 +11,7 @@ class PlaylistOrm(Model):
     
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
-    name: Mapped[str] = mapped_column(nullable=False)
+    name: Mapped[str] = mapped_column(nullable=False, index=True)
     is_public: Mapped[bool] = mapped_column(default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     
@@ -31,8 +31,8 @@ class TrackOrm(Model):
     
     id: Mapped[int] = mapped_column(primary_key=True)
     uploaded_by: Mapped[int] = mapped_column(ForeignKey('users.id'))
-    title: Mapped[str] = mapped_column(nullable=False, unique=True)
-    artist: Mapped[str] = mapped_column(nullable=False)
+    title: Mapped[str] = mapped_column(nullable=False, unique=True, index=True)
+    artist: Mapped[str] = mapped_column(nullable=False, index=True)
     genre_id: Mapped[int] = mapped_column(ForeignKey('genres.id'), nullable=False, default=1)
     uploaded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     
@@ -43,7 +43,7 @@ class GenreOrm(Model):
     __tablename__ = 'genres'
     
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(unique=True, nullable=False)
+    name: Mapped[str] = mapped_column(unique=True, nullable=False, index=True)
 
 
 

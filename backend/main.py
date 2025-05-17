@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from database import create_tables, delete_tables
 from router.auth import router as auth_router
 from router.music import track_router, genre_router, playlist_router, library_router
+from router.search import search_router
 
 
 
@@ -38,14 +39,18 @@ def custom_openapi():
     }
     
     secured_paths = {
+        #Авторизация
         "/auth/me": {"method": "get", "security": [{"Bearer": []}]},
         "/auth/logout": {"method": "post", "security": [{"Bearer": []}]},
+        #Треки
         "/tracks": {"method": "post", "security": [{"Bearer": []}]},
+        #Плейлисты
         "/playlists": {"method": "post", "security": [{"Bearer": []}]},
         "/playlists/update/{playlist_id}": {"method": "put", "security": [{"Bearer": []}]},
         "/playlists/remove/{playlist_id}": {"method": "delete", "security": [{"Bearer": []}]},
         "/playlists/add-track": {"method": "post", "security": [{"Bearer": []}]},
         "/playlists/remove-track": {"method": "post", "security": [{"Bearer": []}]},
+        #"Моя медиатека"
         "/library/favorites/add/{track_id}": {"method": "post", "security": [{"Bearer": []}]},
         "/library/favorites/remove/{track_id}": {"method": "post", "security": [{"Bearer": []}]},
         "/library/favorites": {"method": "get", "security": [{"Bearer": []}]},
@@ -55,6 +60,8 @@ def custom_openapi():
         "/library/save/{playlist_id}": {"method": "post", "security": [{"Bearer": []}]},
         "/library/unsave/{playlist_id}": {"method": "post", "security": [{"Bearer": []}]},
         "/library/saved": {"method": "get", "security": [{"Bearer": []}]},
+        #Поиск
+        "/search": {"method": "get", "security": [{"Bearer": []}]},
     }
     
     for path, config in secured_paths.items():
@@ -72,6 +79,7 @@ app.include_router(track_router)
 app.include_router(genre_router)
 app.include_router(playlist_router)
 app.include_router(library_router)
+app.include_router(search_router)
 
 
 app.add_middleware(
