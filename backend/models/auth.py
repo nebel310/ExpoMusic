@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from sqlalchemy import ForeignKey, DateTime
+from sqlalchemy import ForeignKey, DateTime, select
 from sqlalchemy.orm import Mapped, mapped_column
 from database import Model
 
@@ -35,3 +35,19 @@ class BlacklistedTokenOrm(Model):
     token: Mapped[str] = mapped_column(unique=True)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
+
+async def create_initial_user(session):
+    if not await session.scalar(select(UserOrm)):
+        admin_user = UserOrm(
+            username="string",
+            email="user@example.com",
+            hashed_password="string",
+            is_confirmed=True,
+            is_admin=True
+        )
+        session.add(admin_user)
+        await session.commit()
+        return admin_user
+    return None
