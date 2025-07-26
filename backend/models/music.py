@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from sqlalchemy import ForeignKey, DateTime, Table, Column
+from sqlalchemy import ForeignKey, DateTime, Table, Column, select
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from database import Model
 
@@ -72,3 +72,69 @@ class SavedPlaylistOrm(Model):
     user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
     playlist_id: Mapped[int] = mapped_column(ForeignKey('playlists.id'))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    
+    
+
+
+async def create_initial_music_data(session):
+    from .auth import UserOrm
+    from .music import GenreOrm, TrackOrm, PlaylistOrm
+    
+    # Создаем жанры
+    if not await session.scalar(select(GenreOrm)):
+        genres = [
+            GenreOrm(name="NoGenre"),
+            GenreOrm(name="Rock"),
+            GenreOrm(name="Pop"),
+            GenreOrm(name="Hip-Hop")
+        ]
+        session.add_all(genres)
+        await session.commit()
+    
+    # Получаем пользователя
+    user = await session.scalar(select(UserOrm).where(UserOrm.email == "user@example.com"))
+    if not user:
+        return
+    
+    # Создаем треки
+    if not await session.scalar(select(TrackOrm)):
+        rock_genre = await session.scalar(select(GenreOrm).where(GenreOrm.name == "Rock"))
+        pop_genre = await session.scalar(select(GenreOrm).where(GenreOrm.name == "Pop"))
+        
+        tracks = [
+            TrackOrm(
+                uploaded_by=user.id,
+                title="Example Track 1",
+                artist="Test Artist",
+                genre_id=rock_genre.id
+            ),
+            TrackOrm(
+                uploaded_by=user.id,
+                title="Example Track 2",
+                artist="Test Artist",
+                genre_id=pop_genre.id
+            )
+        ]
+        session.add_all(tracks)
+        await session.commit()
+    
+    # Создаем плейлист
+    if not await session.scalar(select(PlaylistOrm)):
+        tracks = await session.scalars(select(TrackOrm))
+        tracks_list = list(tracks.all())
+        
+        playlist = PlaylistOrm(
+            user_id=user.id,
+            name="Car Playlist",
+            is_public=True
+        )
+        session.add(playlist)
+        await session.commit()
+        
+        # Добавляем треки в плейлист через таблицу связи
+        stmt = playlist_tracks.insert().values([
+            {"playlist_id": playlist.id, "track_id": track.id}
+            for track in tracks_list
+        ])
+        await session.execute(stmt)
+        await session.commit()
