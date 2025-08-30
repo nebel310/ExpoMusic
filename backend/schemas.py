@@ -131,3 +131,12 @@ class SSavedPlaylist(BaseModel):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+
+class SSearchResult(BaseModel):
+    tracks: list[STrack]
+    playlists: list[SPlaylist]
+    genres: list[SGenre]
+
+    model_config = ConfigDict(from_attributes=True)
