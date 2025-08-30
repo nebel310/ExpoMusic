@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music App - Треки</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header class="header">
+        <!-- Такое же меню как в dashboard -->
+    </header>
+
+    <main class="container">
+        <div class="page-header">
+            <h1>Треки</h1>
+            <button id="add-track-btn" class="btn-primary">Добавить трек</button>
+        </div>
+
+        <div class="filters">
+            <div class="form-group">
+                <label for="genre-filter">Жанр:</label>
+                <select id="genre-filter">
+                    <option value="">Все</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="search">Поиск:</label>
+                <input type="text" id="search" placeholder="Название или исполнитель">
+            </div>
+        </div>
+
+        <div class="track-list" id="track-list">
+            <!-- Треки будут загружаться здесь -->
+        </div>
+
+        <div class="pagination">
+            <button id="prev-page" disabled>Назад</button>
+            <span id="page-info">Страница 1</span>
+            <button id="next-page">Вперед</button>
+        </div>
+    </main>
+
+    <!-- Модальное окно для добавления трека -->
+    <div class="modal hidden" id="add-track-modal">
+        <div class="modal-content">
+            <h2>Добавить трек</h2>
+            <form id="track-form">
+                <div class="form-group">
+                    <label for="track-title">Название:</label>
+                    <input type="text" id="track-title" required>
+                </div>
+                <div class="form-group">
+                    <label for="track-artist">Исполнитель:</label>
+                    <input type="text" id="track-artist" required>
+                </div>
+                <div class="form-group">
+                    <label for="track-genre">Жанр:</label>
+                    <select id="track-genre" required></select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" id="cancel-track" class="btn-secondary">Отмена</button>
+                    <button type="submit" class="btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/utils.js"></script>
+    <script src="js/http.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/genres.js"></script>
+    <script src="js/tracks.js"></script>
+</body>
+</html>
