@@ -28,3 +28,5 @@ assets
 
 test/
 test.py
+
+*.csv
