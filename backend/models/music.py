@@ -33,6 +33,7 @@ class TrackOrm(Model):
     uploaded_by: Mapped[int] = mapped_column(ForeignKey('users.id'))
     title: Mapped[str] = mapped_column(nullable=False, unique=True, index=True)
     artist: Mapped[str] = mapped_column(nullable=False, index=True)
+    year: Mapped[int | None] = mapped_column(nullable=True)
     genre_id: Mapped[int] = mapped_column(ForeignKey('genres.id'), nullable=False, default=1)
     uploaded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     

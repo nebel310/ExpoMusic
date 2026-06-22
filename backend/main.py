@@ -20,8 +20,8 @@ async def init_db():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await delete_tables()
-    print('База очищена')
+    # await delete_tables()
+    # print('База очищена')
     await create_tables()
     print('База готова к работе')
     await init_db()
