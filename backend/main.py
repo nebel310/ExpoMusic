@@ -4,11 +4,10 @@ from fastapi.openapi.utils import get_openapi
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from database import create_tables, delete_tables, new_session
-from models.auth import create_initial_user
-from models.music import create_initial_music_data
 from router.auth import router as auth_router
 from router.music import track_router, genre_router, playlist_router, library_router
 from router.search import search_router
+from seed import create_test_data
 
 
 
@@ -16,8 +15,7 @@ from router.search import search_router
 async def init_db():
     await create_tables()
     async with new_session() as session:
-        await create_initial_user(session)
-        await create_initial_music_data(session)
+        await create_test_data()
 
 
 @asynccontextmanager
@@ -26,12 +24,9 @@ async def lifespan(app: FastAPI):
     print('База очищена')
     await create_tables()
     print('База готова к работе')
-    
-    async with new_session() as session:
-        await create_initial_user(session)
-        await create_initial_music_data(session)
-    
+    await init_db()
     print('Занесены тестовые данные в базу данных')
+    
     yield
     print('Выключение')
 
@@ -99,7 +94,7 @@ app.include_router(search_router)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://127.0.0.1:5500"],  # Тут адрес фронтенда
+    allow_origins=["*"],  # Тут адрес фронтенда
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
