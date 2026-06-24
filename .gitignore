@@ -30,3 +30,6 @@ test/
 test.py
 
 *.csv
+
+.ipynb_checkpoints
+*.ipynb
