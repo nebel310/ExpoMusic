@@ -1,7 +1,3 @@
-"""
-Скрипт экспорта треков в CSV.
-Запускать локально при поднятой локальной PostgreSQL.
-"""
 import asyncio
 import csv
 import random
